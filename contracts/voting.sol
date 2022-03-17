@@ -66,6 +66,7 @@ contract Voting is Ownable{
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
     require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "proposal register is closed");
     proposals.push(Proposal(_proposal, 0));
+    emit ProposalRegistered(proposals.length - 1);
   }
 
   // Get proposal with proposals array index
@@ -76,6 +77,15 @@ contract Voting is Ownable{
     } else {
       return proposals[_id].description;
     }
+  }
+
+  function vote(uint _id) public isWhiteListed(msg.sender) {
+    require(workflowState == WorkflowStatus.VotingSessionStarted, "Vote session is closed");
+    require(votersWhiteList[msg.sender].hasVoted == true, "Already voted");
+    proposals[_id].voteCount ++;
+    votersWhiteList[msg.sender].hasVoted = true;
+    votersWhiteList[msg.sender].votedProposalId = _id;
+    emit Voted (msg.sender, _id);
   }
 
 } 
