@@ -35,6 +35,11 @@ contract Voting is Ownable{
   event ProposalRegistered(uint proposalId);
   event Voted (address voter, uint proposalId);
 
+  // Adding the Owner as a potential voter
+  constructor() {
+    votersWhiteList[msg.sender] = Voter(true, false, 0);
+  }
+
   modifier isWhiteListed(address _address) {
     require(votersWhiteList[_address].isRegistered == true, "Not allowed");
     _;
