@@ -6,9 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting {
 
-  uint winningProposalId;
-  WorkflowStatus public workfowState = WorkflowStatus.RegisteringVoters;
-  mapping (address => Proposal) public votersWhiteList;
+  WorkflowStatus workfowState = WorkflowStatus.RegisteringVoters;
+  mapping (address => Voter) public votersWhiteList;
 
   struct Voter {
     bool isRegistered;
@@ -36,6 +35,10 @@ contract Voting {
   event ProposalRegistered(uint proposalId);
   event Voted (address voter, uint proposalId);
 
+  modifier isWhiteListed(address _address) {
+    require(votersWhiteList[_address].isRegistered == true, "Not allowed");
+  } 
+
 
   // worflow status manageable by Owner only
   function turnStateToRegisteringVoters() public onlyOwner { workfowState = WorkflowStatus.RegisteringVoters; }
@@ -51,5 +54,12 @@ contract Voting {
     votersWhiteList[_address] = Voter();
     emit VoterRegistered(_address);
   } 
+
+  // Registring voter poposal
+  function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
+    require(workflowState == ProposalsRegistrationStarted, "proposal register is closed");
+  }
+
+
 } 
 
