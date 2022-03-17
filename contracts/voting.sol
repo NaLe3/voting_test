@@ -4,16 +4,16 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract Voting {
+contract Voting is Ownable{
 
-  WorkflowStatus workfowState = WorkflowStatus.RegisteringVoters;
+  WorkflowStatus workflowState = WorkflowStatus.RegisteringVoters;
   mapping (address => Voter) public votersWhiteList;
-
+  Proposal[] public proposals; 
+ 
   struct Voter {
     bool isRegistered;
     bool hasVoted;
     uint votedProposalId;
-    uint winningProposalId;
   }
 
   struct Proposal {
@@ -37,29 +37,41 @@ contract Voting {
 
   modifier isWhiteListed(address _address) {
     require(votersWhiteList[_address].isRegistered == true, "Not allowed");
+    _;
   } 
 
-
   // worflow status manageable by Owner only
-  function turnStateToRegisteringVoters() public onlyOwner { workfowState = WorkflowStatus.RegisteringVoters; }
-  function turnStateToProposalsRegistrationStarted() public onlyOwner { workfowState = WorkflowStatus.ProposalsRegistrationStarted; }
-  function turnStateToProposalsRegistrationEnded() public onlyOwner { workfowState = WorkflowStatus.ProposalsRegistrationEnded; }
-  function turnStateToVotingSessionStarted() public onlyOwner { workfowState = WorkflowStatus.VotingSessionStarted; }
-  function turnStateToVotingSessionEnded() public onlyOwner { workfowState = WorkflowStatus.VotingSessionEnded; }
-  function turnStateToVotesTallied() public onlyOwner { workfowState = WorkflowStatus.VotesTallied; }
+  function turnStateToRegisteringVoters() public onlyOwner { workflowState = WorkflowStatus.RegisteringVoters; }
+  function turnStateToProposalsRegistrationStarted() public onlyOwner { workflowState = WorkflowStatus.ProposalsRegistrationStarted; }
+  function turnStateToProposalsRegistrationEnded() public onlyOwner { workflowState = WorkflowStatus.ProposalsRegistrationEnded; }
+  function turnStateToVotingSessionStarted() public onlyOwner { workflowState = WorkflowStatus.VotingSessionStarted; }
+  function turnStateToVotingSessionEnded() public onlyOwner { workflowState = WorkflowStatus.VotingSessionEnded; }
+  function turnStateToVotesTallied() public onlyOwner { workflowState = WorkflowStatus.VotesTallied; }
 
-  // The owner can register voter 
+   
+  //The owner can register voter 
   function registringVoter(address _address) public onlyOwner {
-    require(workfowState == RegisteringVoters, "voter register is closed");
-    votersWhiteList[_address] = Voter();
+    require(workflowState == WorkflowStatus.RegisteringVoters, "voter register is closed");
+    require(votersWhiteList[_address].isRegistered == false, "Already registered");
+    votersWhiteList[_address] = Voter(true, false, 0);
     emit VoterRegistered(_address);
   } 
 
   // Registring voter poposal
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
-    require(workflowState == ProposalsRegistrationStarted, "proposal register is closed");
+    require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "proposal register is closed");
+    proposals.push(Proposal(_proposal, 0));
   }
 
+  // Get proposal with proposals array index
+  function getProposal(uint _id) public view isWhiteListed(msg.sender) returns(string memory){
+    uint proposalsLength = proposals.length;
+    if (proposalsLength == 0) {
+      return "No proposals yet";
+    } else {
+      return proposals[_id].description;
+    }
+  }
 
 } 
 
