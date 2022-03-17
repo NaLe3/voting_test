@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting {
 
+  uint winningProposalId; 
+
   struct Voter {
     bool isRegistered;
     bool hasVoted;
@@ -26,4 +28,11 @@ contract Voting {
     VotesTallied
   }
 
+  event VoterRegistered(address voterAddress); 
+  event WorkflowStatusChange(WorkflowStatus previousStatus, WorkflowStatus newStatus);
+  event ProposalRegistered(uint proposalId);
+  event Voted (address voter, uint proposalId);
+
+
 } 
+
