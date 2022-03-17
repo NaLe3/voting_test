@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Voting is Ownable{
 
   WorkflowStatus workflowState = WorkflowStatus.RegisteringVoters;
-  mapping (address => Voter) public votersWhiteList;
+  mapping (address => Voter) votersWhiteList;
+  mapping (uint => address) proposalOwners;
   Proposal[] public proposals; 
  
   struct Voter {
@@ -65,14 +66,15 @@ contract Voting is Ownable{
   // Registring voter poposal
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
     require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "proposal register is closed");
+    uint proposalId = proposals.length - 1;
     proposals.push(Proposal(_proposal, 0));
-    emit ProposalRegistered(proposals.length - 1);
+    proposalOwners[proposalId] = msg.sender;
+    emit ProposalRegistered(proposalId);
   }
 
   // Get proposal with proposals array index
   function getProposal(uint _id) public view isWhiteListed(msg.sender) returns(string memory){
-    uint proposalsLength = proposals.length;
-    if (proposalsLength == 0) {
+    if (proposals.length == 0) {
       return "No proposals yet";
     } else {
       return proposals[_id].description;
