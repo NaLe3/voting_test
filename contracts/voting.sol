@@ -47,7 +47,9 @@ contract Voting {
 
   // The owner can register voter 
   function registringVoter(address _address) public onlyOwner {
+    require(workfowState == RegisteringVoters, "voter register is closed");
     votersWhiteList[_address] = Voter();
+    emit VoterRegistered(_address);
   } 
 } 
 
