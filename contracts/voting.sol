@@ -98,7 +98,7 @@ contract Voting is Ownable{
   /* 
   Get proposal with proposals array index 
   @params _id start at "1" for the voter
-  therefore as we use the proposals index for proposal id
+  therefore as we use the proposals[] index for proposalId
   we need to do proposals[_id - 1] to return the proposal decription expected
   */
   function getProposal(uint _id) public view isWhiteListed(msg.sender) returns(string memory){
@@ -108,7 +108,7 @@ contract Voting is Ownable{
       return proposals[_id - 1].description;
     }
   }
-
+  //@params _id start at "1" for the voter
   function vote(uint _id) public isWhiteListed(msg.sender) {
     require(workflowState == WorkflowStatus.VotingSessionStarted, "Vote session is closed");
     require(votersWhiteList[msg.sender].hasVoted == false, "Already voted");
@@ -116,6 +116,11 @@ contract Voting is Ownable{
     votersWhiteList[msg.sender].hasVoted = true;
     votersWhiteList[msg.sender].votedProposalId = _id;
     emit Voted (msg.sender, _id);
+  }
+
+  function getVote(address _address, uint _id) public view isWhiteListed(msg.sender) returns(string memory){
+    uint proposalId = votersWhiteList[_address].votedProposalId - 1; 
+    return proposals[].description;
   }
 
   // We look for the largest voteCount and it index (as we use the index as proposal Id)
