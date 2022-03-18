@@ -46,6 +46,14 @@ contract Voting is Ownable{
      require(votersWhiteList[_address].isRegistered == true, "Not regesitered");
     _;
   }
+
+  modifier proposerIdAllowed(uint _id) {
+    require(
+      0 < _id && _id <= proposals.length,
+      "This ID does not exist" 
+    );
+    _;
+  }
   
   /*
     worflow status manageable by Owner only
@@ -60,11 +68,11 @@ contract Voting is Ownable{
     if (currentState  == WorkflowStatus.RegisteringVoters) {
       workflowState = currentState = WorkflowStatus.ProposalsRegistrationStarted;
       previousState = WorkflowStatus.RegisteringVoters;
-      CurrentStateToReturn = "Registration is oponned"; 
+      CurrentStateToReturn = "Proposal registration is oponned"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationStarted) {
       workflowState = currentState =   WorkflowStatus.ProposalsRegistrationEnded;
       previousState = WorkflowStatus.ProposalsRegistrationStarted;
-      CurrentStateToReturn = "Registration has ended"; 
+      CurrentStateToReturn = "Proposal registration has ended"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationEnded) {
       workflowState = currentState =  WorkflowStatus.VotingSessionStarted;
       previousState = WorkflowStatus.ProposalsRegistrationEnded;
@@ -101,15 +109,13 @@ contract Voting is Ownable{
   therefore as we use the proposals[] index for proposalId
   we need to do proposals[_id - 1] to return the proposal decription expected
   */
-  function getProposal(uint _id) public view isWhiteListed(msg.sender) returns(string memory){
-    if (proposals.length == 0) {
-      return "No proposals yet";
-    } else {
-      return proposals[_id - 1].description;
-    }
+  function getProposal(uint _id) public view isWhiteListed(msg.sender) proposerIdAllowed(_id) returns(string memory){
+    require(proposals.length != 0, "No proposals yet");
+    return proposals[_id - 1].description;
   }
+
   //@params _id start at "1" for the voter
-  function vote(uint _id) public isWhiteListed(msg.sender) {
+  function vote(uint _id) public isWhiteListed(msg.sender) proposerIdAllowed(_id) {
     require(workflowState == WorkflowStatus.VotingSessionStarted, "Vote session is closed");
     require(votersWhiteList[msg.sender].hasVoted == false, "Already voted");
     proposals[_id - 1].voteCount ++;
@@ -119,6 +125,7 @@ contract Voting is Ownable{
   }
 
   function getVote(address _address) public view isWhiteListed(msg.sender) returns(string memory){
+    require(votersWhiteList[_address].isRegistered == true, "Not regesitered");
     uint proposalId = votersWhiteList[_address].votedProposalId - 1;
     return proposals[proposalId].description;
   }
