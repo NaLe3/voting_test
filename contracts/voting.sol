@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting is Ownable{
 
-  WorkflowStatus workflowState = WorkflowStatus.RegisteringVoters;
+  WorkflowStatus workflowState;
   mapping (address => Voter) votersWhiteList;
-  mapping (uint => address) proposalOwners;
-  Proposal[] public proposals; 
+  Proposal[] proposals; 
+  uint public winningProposalId;
  
   struct Voter {
     bool isRegistered;
@@ -39,6 +39,7 @@ contract Voting is Ownable{
   // Adding the Owner as a potential voter
   constructor() {
     votersWhiteList[msg.sender] = Voter(true, false, 0);
+    workflowState = WorkflowStatus.RegisteringVoters;
   }
 
   modifier isWhiteListed(address _address) {
@@ -64,15 +65,15 @@ contract Voting is Ownable{
   } 
 
   // Registring voter poposal
+  //@params the indexes of the array proposal are use as the proposal _id 
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
     require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "proposal register is closed");
-    uint proposalId = proposals.length - 1;
     proposals.push(Proposal(_proposal, 0));
-    proposalOwners[proposalId] = msg.sender;
-    emit ProposalRegistered(proposalId);
+    emit ProposalRegistered(proposals.length - 1);
   }
 
-  // Get proposal with proposals array index
+  // Get proposal with proposals array index 
+  //@params _id is the index of the array proposal 
   function getProposal(uint _id) public view isWhiteListed(msg.sender) returns(string memory){
     if (proposals.length == 0) {
       return "No proposals yet";
@@ -83,11 +84,25 @@ contract Voting is Ownable{
 
   function vote(uint _id) public isWhiteListed(msg.sender) {
     require(workflowState == WorkflowStatus.VotingSessionStarted, "Vote session is closed");
-    require(votersWhiteList[msg.sender].hasVoted == true, "Already voted");
+    require(votersWhiteList[msg.sender].hasVoted == false, "Already voted");
     proposals[_id].voteCount ++;
     votersWhiteList[msg.sender].hasVoted = true;
     votersWhiteList[msg.sender].votedProposalId = _id;
     emit Voted (msg.sender, _id);
+  }
+
+  function voteTally() public onlyOwner {
+    require(workflowState == WorkflowStatus.VotingSessionEnded, "Vote session must be closed");
+    uint256 largest = 0;
+    uint256 i;
+    Proposal[] memory tempProposals = proposals; 
+
+    for(i = 0; i < tempProposals.length; i++){
+        if(tempProposals[i].voteCount > largest) {
+            largest = tempProposals[i].voteCount; 
+        } 
+    }
+     winningProposalId = largest;   
   }
 
 } 
