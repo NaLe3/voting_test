@@ -43,10 +43,10 @@ contract Voting is Ownable{
   }
 
   modifier isWhiteListed(address _address) {
-    require(votersWhiteList[_address].isRegistered == true, "Not allowed");
+     require(votersWhiteList[_address].isRegistered == true, "Not regesitered");
     _;
-  } 
-
+  }
+  
   /*
     worflow status manageable by Owner only
     @dev the variable CurrentStateToReturn has been implemented to track 
@@ -60,19 +60,19 @@ contract Voting is Ownable{
     if (currentState  == WorkflowStatus.RegisteringVoters) {
       workflowState = currentState = WorkflowStatus.ProposalsRegistrationStarted;
       previousState = WorkflowStatus.RegisteringVoters;
-      CurrentStateToReturn = "State is ProposalsRegistrationStarted"; 
+      CurrentStateToReturn = "Registration is oponned"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationStarted) {
       workflowState = currentState =   WorkflowStatus.ProposalsRegistrationEnded;
       previousState = WorkflowStatus.ProposalsRegistrationStarted;
-      CurrentStateToReturn = "State is ProposalsRegistrationEnded"; 
+      CurrentStateToReturn = "Registration has ended"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationEnded) {
       workflowState = currentState =  WorkflowStatus.VotingSessionStarted;
       previousState = WorkflowStatus.ProposalsRegistrationEnded;
-      CurrentStateToReturn = "State is VotingSessionStarted"; 
+      CurrentStateToReturn = "Voting session is openned"; 
     } else if (currentState  == WorkflowStatus.VotingSessionStarted) {
       workflowState = currentState =  WorkflowStatus.VotingSessionEnded;
       previousState = WorkflowStatus.VotingSessionStarted;
-      CurrentStateToReturn = "State is VotingSessionEnded, proceed to the vote tally"; 
+      CurrentStateToReturn = "Voting session has ended, the Administrator is proceeding to the vote tally"; 
     } 
 
     emit WorkflowStatusChange(previousState, currentState);
@@ -81,7 +81,7 @@ contract Voting is Ownable{
    
   //The owner only can register voter 
   function registringVoter(address _address) public onlyOwner {
-    require(workflowState == WorkflowStatus.RegisteringVoters, "voter register is closed");
+    require(workflowState == WorkflowStatus.RegisteringVoters, "Voter register is closed");
     require(votersWhiteList[_address].isRegistered == false, "Already registered");
     votersWhiteList[_address] = Voter(true, false, 0);
     emit VoterRegistered(_address);
@@ -90,7 +90,7 @@ contract Voting is Ownable{
   // Registring voter poposal
   //@params the indexes of the array proposal are use as the proposal _id 
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
-    require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "proposal register is closed");
+    require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "Proposal register is closed");
     proposals.push(Proposal(_proposal, 0));
     emit ProposalRegistered(proposals.length);
   }
@@ -118,9 +118,9 @@ contract Voting is Ownable{
     emit Voted (msg.sender, _id);
   }
 
-  function getVote(address _address, uint _id) public view isWhiteListed(msg.sender) returns(string memory){
-    uint proposalId = votersWhiteList[_address].votedProposalId - 1; 
-    return proposals[].description;
+  function getVote(address _address) public view isWhiteListed(msg.sender) returns(string memory){
+    uint proposalId = votersWhiteList[_address].votedProposalId - 1;
+    return proposals[proposalId].description;
   }
 
   // We look for the largest voteCount and it index (as we use the index as proposal Id)
@@ -147,7 +147,7 @@ contract Voting is Ownable{
 
   function getWinner() public view isWhiteListed(msg.sender) returns(string memory) {
     require(
-      winningProposalId != 0 && workflowState == WorkflowStatus.VotesTallied, 
+      workflowState == WorkflowStatus.VotesTallied, 
       "Result is not published yet"
     );
     return proposals[winningProposalId].description;
