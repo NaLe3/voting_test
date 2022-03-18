@@ -9,7 +9,7 @@ contract Voting is Ownable{
   WorkflowStatus workflowState;
   mapping (address => Voter) votersWhiteList;
   Proposal[] proposals; 
-  uint public winningProposalId;
+  uint winningProposalId;
  
   struct Voter {
     bool isRegistered;
@@ -63,12 +63,6 @@ contract Voting is Ownable{
       workflowState = WorkflowStatus.VotesTallied;
     } 
   }
-
-
-
- 
-  function turnStateToVotesTallied() public onlyOwner { workflowState = WorkflowStatus.VotesTallied; }
-
    
   //The owner can register voter 
   function registringVoter(address _address) public onlyOwner {
@@ -120,6 +114,12 @@ contract Voting is Ownable{
         } 
     }
      winningProposalId = largestVoteCountId;   
+  }
+
+  function getWinner() public isWhiteListed(msg.sender) returns(string memory) {
+    require(proposals[winningProposalId].description, "Results has not been published yet");
+    
+    return proposals[winningProposalId].description;
   }
 
 } 
