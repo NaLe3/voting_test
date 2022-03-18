@@ -48,11 +48,25 @@ contract Voting is Ownable{
   } 
 
   // worflow status manageable by Owner only
-  function turnStateToRegisteringVoters() public onlyOwner { workflowState = WorkflowStatus.RegisteringVoters; }
-  function turnStateToProposalsRegistrationStarted() public onlyOwner { workflowState = WorkflowStatus.ProposalsRegistrationStarted; }
-  function turnStateToProposalsRegistrationEnded() public onlyOwner { workflowState = WorkflowStatus.ProposalsRegistrationEnded; }
-  function turnStateToVotingSessionStarted() public onlyOwner { workflowState = WorkflowStatus.VotingSessionStarted; }
-  function turnStateToVotingSessionEnded() public onlyOwner { workflowState = WorkflowStatus.VotingSessionEnded; }
+  function goToNextState() public onlyOwner {
+    WorkflowStatus currentState = workflowState;
+
+    if (currentState  == WorkflowStatus.RegisteringVoters) {
+      workflowState = WorkflowStatus.ProposalsRegistrationStarted;
+    } else if (currentState  == WorkflowStatus.ProposalsRegistrationStarted) {
+      workflowState = WorkflowStatus.ProposalsRegistrationEnded;
+    } else if (currentState  == WorkflowStatus.ProposalsRegistrationEnded) {
+      workflowState = WorkflowStatus.VotingSessionStarted;
+    } else if (currentState  == WorkflowStatus.VotingSessionStarted) {
+      workflowState = WorkflowStatus.VotingSessionEnded;
+    } else if (currentState  == WorkflowStatus.VotingSessionEnded) {
+      workflowState = WorkflowStatus.VotesTallied;
+    } 
+  }
+
+
+
+ 
   function turnStateToVotesTallied() public onlyOwner { workflowState = WorkflowStatus.VotesTallied; }
 
    
@@ -91,6 +105,7 @@ contract Voting is Ownable{
     emit Voted (msg.sender, _id);
   }
 
+  // We looking for the largest voteCount and it index (as we use the index as proposal Id)
   function voteTally() public onlyOwner {
     require(workflowState == WorkflowStatus.VotingSessionEnded, "Vote session must be closed");
     uint256 largestCount;
@@ -102,7 +117,7 @@ contract Voting is Ownable{
             largestCount = tempProposals[i].voteCount; 
         } 
     }
-     winningProposalId = largestCount;   
+     winningProposalId = i;   
   }
 
 } 
