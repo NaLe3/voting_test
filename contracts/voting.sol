@@ -109,15 +109,17 @@ contract Voting is Ownable{
   function voteTally() public onlyOwner {
     require(workflowState == WorkflowStatus.VotingSessionEnded, "Vote session must be closed");
     uint256 largestCount;
+    uint256 largestVoteCountId;
     uint256 i;
     Proposal[] memory tempProposals = proposals; 
 
     for(i = 0; i < tempProposals.length; i++){
         if(tempProposals[i].voteCount > largestCount) {
             largestCount = tempProposals[i].voteCount; 
+            largestVoteCountId = i;
         } 
     }
-     winningProposalId = i;   
+     winningProposalId = largestVoteCountId;   
   }
 
 } 
