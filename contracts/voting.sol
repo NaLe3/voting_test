@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Voting is Ownable{
 
   WorkflowStatus workflowState;
-  mapping (address => Voter) votersWhiteList;
-  Proposal[] proposals; 
-  uint winningProposalId;
+  mapping (address => Voter) private votersWhiteList;
+  Proposal[] private proposals; 
+  uint private winningProposalId;
  
   struct Voter {
     bool isRegistered;
@@ -66,7 +66,7 @@ contract Voting is Ownable{
     @dev the variable CurrentStateToReturn has been implemented to track 
     the current state for development purpose (debugging)
   */
-  function goToNextState() public onlyOwner returns(string memory){
+  function goToNextState() external onlyOwner returns(string memory){
     WorkflowStatus currentState = workflowState;
     WorkflowStatus previousState;
     string memory CurrentStateToReturn; 
@@ -94,7 +94,7 @@ contract Voting is Ownable{
   }
    
   //The owner only can register new voter 
-  function registringVoter(address _address) public onlyOwner {
+  function registringVoter(address _address) external onlyOwner {
     require(workflowState == WorkflowStatus.RegisteringVoters, "Voter register is closed");
     require(votersWhiteList[_address].isRegistered == false, "Address already registered");
     votersWhiteList[_address] = Voter(true, false, 0);
@@ -105,7 +105,7 @@ contract Voting is Ownable{
   Registring voter poposal
   @params the index of the array proposal is used as the proposal _id 
   */
-  function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
+  function regsitringProposal(string memory _proposal) external isWhiteListed(msg.sender){
     require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "Proposal register is closed");
     proposals.push(Proposal(_proposal, 0));
     emit ProposalRegistered(proposals.length);
@@ -115,7 +115,7 @@ contract Voting is Ownable{
   @params _id is the proposal ID. It starts at "1" for the voter,
   so we need to do proposals[_id - 1] to retreive the corresponding index
   */
-  function getProposal(uint _id) public view isWhiteListed(msg.sender) proposalIdAllowed(_id) returns(string memory){
+  function getProposal(uint _id) external view isWhiteListed(msg.sender) proposalIdAllowed(_id) returns(string memory){
     require(proposals.length != 0, "No proposals yet");
     return proposals[_id - 1].description;
   }
@@ -124,7 +124,7 @@ contract Voting is Ownable{
   @params _id is the proposal ID. It starts at "1" for the voter, 
   so we need to do proposals[_id - 1] to retreive the corresponding index
   */
-  function vote(uint _id) public isWhiteListed(msg.sender) proposalIdAllowed(_id) {
+  function vote(uint _id) external isWhiteListed(msg.sender) proposalIdAllowed(_id) {
     require(workflowState == WorkflowStatus.VotingSessionStarted, "Vote session is closed");
     require(votersWhiteList[msg.sender].hasVoted == false, "Already voted");
     proposals[_id - 1].voteCount ++;
@@ -133,7 +133,7 @@ contract Voting is Ownable{
     emit Voted (msg.sender, _id);
   }
 
-  function getVote(address _address) public view isWhiteListed(msg.sender) returns(string memory){
+  function getVote(address _address) external view isWhiteListed(msg.sender) returns(string memory){
     require(votersWhiteList[_address].isRegistered == true, "Not registered");
     uint proposalId = votersWhiteList[_address].votedProposalId - 1;
     return proposals[proposalId].description;
@@ -143,7 +143,7 @@ contract Voting is Ownable{
   anytime the value(uint voteCount) is higher than the largestCournt, we replace 
   the later by this value.  
   */
-  function voteTally() public onlyOwner {
+  function voteTally() external onlyOwner {
     require(workflowState != WorkflowStatus.VotesTallied, "Result has already been published");
     require(workflowState == WorkflowStatus.VotingSessionEnded, "Vote session must be closed");
     uint256 largestCount;
@@ -166,7 +166,7 @@ contract Voting is Ownable{
   }
 
   // Retreive the winning proposal description 
-  function getWinner() public view isWhiteListed(msg.sender) returns(string memory) {
+  function getWinner() external view isWhiteListed(msg.sender) returns(string memory) {
     require(workflowState == WorkflowStatus.VotesTallied, "Result is not published yet");
     return proposals[winningProposalId].description;
   }
