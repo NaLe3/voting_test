@@ -103,7 +103,7 @@ contract Voting is Ownable{
 
   /*
   Registring voter poposal
-  @params the indexes of the array proposal are use as the proposal _id 
+  @params the index of the array proposal is used as the proposal _id 
   */
   function regsitringProposal(string memory _proposal) public isWhiteListed(msg.sender){
     require(workflowState == WorkflowStatus.ProposalsRegistrationStarted, "Proposal register is closed");
