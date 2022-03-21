@@ -44,7 +44,7 @@ contract Voting is Ownable{
 
   // Ensure the address is listed in the whitelist to participate in the voting
   modifier isWhiteListed(address _address) {
-     require(votersWhiteList[_address].isRegistered == true, "Not regesitered");
+     require(votersWhiteList[_address].isRegistered == true, "Address not regesitered");
     _;
   }
 
@@ -96,7 +96,7 @@ contract Voting is Ownable{
   //The owner only can register new voter 
   function registringVoter(address _address) public onlyOwner {
     require(workflowState == WorkflowStatus.RegisteringVoters, "Voter register is closed");
-    require(votersWhiteList[_address].isRegistered == false, "Already registered");
+    require(votersWhiteList[_address].isRegistered == false, "Address already registered");
     votersWhiteList[_address] = Voter(true, false, 0);
     emit VoterRegistered(_address);
   } 
@@ -144,6 +144,7 @@ contract Voting is Ownable{
   the later by this value.  
   */
   function voteTally() public onlyOwner {
+    require(workflowState != WorkflowStatus.VotesTallied, "Result has already been published");
     require(workflowState == WorkflowStatus.VotingSessionEnded, "Vote session must be closed");
     uint256 largestCount;
     uint256 largestVoteCountId;
