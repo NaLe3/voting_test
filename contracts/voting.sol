@@ -44,7 +44,7 @@ contract Voting is Ownable{
 
   // Ensure the address is listed in the whitelist to participate in the voting
   modifier isWhiteListed(address _address) {
-     require(votersWhiteList[_address].isRegistered == true, "Address not regesitered");
+     require(votersWhiteList[_address].isRegistered == true, "Address is not registered");
     _;
   }
 
@@ -134,7 +134,7 @@ contract Voting is Ownable{
   }
 
   function getVote(address _address) public view isWhiteListed(msg.sender) returns(string memory){
-    require(votersWhiteList[_address].isRegistered == true, "Not regesitered");
+    require(votersWhiteList[_address].isRegistered == true, "Not registered");
     uint proposalId = votersWhiteList[_address].votedProposalId - 1;
     return proposals[proposalId].description;
   }
