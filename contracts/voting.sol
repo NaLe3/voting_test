@@ -89,7 +89,9 @@ contract Voting is Ownable{
       workflowState = currentState =  WorkflowStatus.VotingSessionEnded;
       previousState = WorkflowStatus.VotingSessionStarted;
       CurrentStateToReturn = "Voting session has ended, the Administrator needs to proceed to the vote tally"; 
-    } 
+    } else if (currentState == WorkflowStatus.VotesTallied) {
+      CurrentStateToReturn = "The voting result is published, please reset to start over"
+    }
 
     emit WorkflowStatusChange(previousState, currentState);
     return CurrentStateToReturn;
