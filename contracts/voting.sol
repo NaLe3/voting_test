@@ -73,9 +73,11 @@ contract Voting is Ownable{
     string memory CurrentStateToReturn; 
      
     if (currentState  == WorkflowStatus.RegisteringVoters) {
+      require(voters.length > 0, "No voters registrered");
       setNextState(WorkflowStatus.RegisteringVoters, WorkflowStatus.ProposalsRegistrationStarted);
       CurrentStateToReturn = "Proposal registration is openned"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationStarted) {
+      require(proposals.length > 0, "No proposals registred");
       setNextState(WorkflowStatus.ProposalsRegistrationStarted, WorkflowStatus.ProposalsRegistrationEnded);
       CurrentStateToReturn = "Proposal registration has ended"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationEnded) {
@@ -83,6 +85,8 @@ contract Voting is Ownable{
       CurrentStateToReturn = "Voting session is openned"; 
     } else if (currentState  == WorkflowStatus.VotingSessionStarted) {
       setNextState(WorkflowStatus.VotingSessionStarted, WorkflowStatus.VotingSessionEnded);
+      CurrentStateToReturn = "Voting session has ended, the Administrator needs to proceed to the vote tally"; 
+    } else if (currentState  == WorkflowStatus.VotingSessionEnded) {
       CurrentStateToReturn = "Voting session has ended, the Administrator needs to proceed to the vote tally"; 
     } else if (currentState == WorkflowStatus.VotesTallied) {
       CurrentStateToReturn = "The voting result is published, please reset to start over";
