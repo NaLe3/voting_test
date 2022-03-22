@@ -9,6 +9,7 @@ contract Voting is Ownable{
   WorkflowStatus workflowState;
   mapping (address => Voter) private votersWhiteList;
   Proposal[] private proposals; 
+  address[] voters;
   uint private winningProposalId;
  
   struct Voter {
@@ -35,6 +36,7 @@ contract Voting is Ownable{
   event WorkflowStatusChange(WorkflowStatus previousStatus, WorkflowStatus newStatus);
   event ProposalRegistered(uint proposalId);
   event Voted (address voter, uint proposalId);
+  event ResetingVote(uint date);
 
   // Automatically adding the contract owner as a potential voter
   constructor() {
@@ -98,6 +100,7 @@ contract Voting is Ownable{
     require(workflowState == WorkflowStatus.RegisteringVoters, "Voter register is closed");
     require(votersWhiteList[_address].isRegistered == false, "Address already registered");
     votersWhiteList[_address] = Voter(true, false, 0);
+    voters.push(_address);
     emit VoterRegistered(_address);
   } 
 
@@ -130,6 +133,7 @@ contract Voting is Ownable{
     proposals[_id - 1].voteCount ++;
     votersWhiteList[msg.sender].hasVoted = true;
     votersWhiteList[msg.sender].votedProposalId = _id;
+    voters.push(msg.sender);
     emit Voted (msg.sender, _id);
   }
 
@@ -159,7 +163,7 @@ contract Voting is Ownable{
     }
 
     workflowState = WorkflowStatus.VotesTallied;
-     winningProposalId = largestVoteCountId;
+    winningProposalId = largestVoteCountId;
 
     emit WorkflowStatusChange(WorkflowStatus.VotingSessionEnded, WorkflowStatus.VotesTallied);
     
@@ -168,7 +172,22 @@ contract Voting is Ownable{
   // Retreive the winning proposal description 
   function getWinner() external view isWhiteListed(msg.sender) returns(string memory) {
     require(workflowState == WorkflowStatus.VotesTallied, "Result is not published yet");
-    return proposals[winningProposalId].description;
+    string memory winningProposalDescription = proposals[winningProposalId].description;
+    return winningProposalDescription;
+
+  }
+
+  function resetVote() external onlyOwner {
+    for (uint i = 0; i < voters.length; i ++) {
+        delete votersWhiteList[voters[i]];
+    }
+    delete voters;
+    delete proposals;
+    winningProposalId = 0;
+    votersWhiteList[msg.sender] = Voter(true, false, 0);
+
+    workflowState = WorkflowStatus.RegisteringVoters;
+    emit ResetingVote(block.timestamp);
   }
 
 } 
