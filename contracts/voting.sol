@@ -63,39 +63,37 @@ contract Voting is Ownable{
     _;
   }
   
-  /*
+   /*
     worflow status manageable by Owner only
     @dev the variable CurrentStateToReturn has been implemented to track 
     the current state for development purpose (debugging)
   */
   function goToNextState() external onlyOwner returns(string memory){
     WorkflowStatus currentState = workflowState;
-    WorkflowStatus previousState;
     string memory CurrentStateToReturn; 
-
+     
     if (currentState  == WorkflowStatus.RegisteringVoters) {
-      workflowState = currentState = WorkflowStatus.ProposalsRegistrationStarted;
-      previousState = WorkflowStatus.RegisteringVoters;
-      CurrentStateToReturn = "Proposal registration is oponned"; 
+      setNextState(WorkflowStatus.RegisteringVoters, WorkflowStatus.ProposalsRegistrationStarted);
+      CurrentStateToReturn = "Proposal registration is openned"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationStarted) {
-      workflowState = currentState =   WorkflowStatus.ProposalsRegistrationEnded;
-      previousState = WorkflowStatus.ProposalsRegistrationStarted;
+      setNextState(WorkflowStatus.ProposalsRegistrationStarted, WorkflowStatus.ProposalsRegistrationEnded);
       CurrentStateToReturn = "Proposal registration has ended"; 
     } else if (currentState  == WorkflowStatus.ProposalsRegistrationEnded) {
-      workflowState = currentState =  WorkflowStatus.VotingSessionStarted;
-      previousState = WorkflowStatus.ProposalsRegistrationEnded;
+      setNextState(WorkflowStatus.ProposalsRegistrationEnded, WorkflowStatus.VotingSessionStarted);
       CurrentStateToReturn = "Voting session is openned"; 
     } else if (currentState  == WorkflowStatus.VotingSessionStarted) {
-      workflowState = currentState =  WorkflowStatus.VotingSessionEnded;
-      previousState = WorkflowStatus.VotingSessionStarted;
+      setNextState(WorkflowStatus.VotingSessionStarted, WorkflowStatus.VotingSessionEnded);
       CurrentStateToReturn = "Voting session has ended, the Administrator needs to proceed to the vote tally"; 
     } else if (currentState == WorkflowStatus.VotesTallied) {
       CurrentStateToReturn = "The voting result is published, please reset to start over";
     }
-
-    emit WorkflowStatusChange(previousState, currentState);
     return CurrentStateToReturn;
   }
+
+  function setNextState(WorkflowStatus _previousState, WorkflowStatus _newState) private {
+      workflowState = _newState;
+      emit WorkflowStatusChange(_previousState, _newState);
+    }
    
   //The owner only can register new voter 
   function registringVoter(address _address) external onlyOwner {
